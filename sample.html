@@ -1,0 +1,17 @@
+<html>
+<head>
+    <title>Sample</title>
+</head>
+<body>
+    <span id="text"></span>
+    <button id="btn" class="btn btn-large">Click me</button>
+    <button>Hello</button>
+    <script>
+        var btn = document.getElementById('btn');
+        btn.addEventListener('click', function() {
+            const text = document.getElementById('text');
+            text.innerHTML = 'Hello, World!';
+        });
+    </script>
+</body>
+</html>
