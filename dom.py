@@ -4,16 +4,18 @@ from fuzzywuzzy import fuzz
 
 class DOMElement:
     tag_name: str
-    children: list['DOMElement']
+    children: list["DOMElement"]
     attributes: dict
     classes: list[str]
     text_content: str
 
     def __init__(self, tag):
         self.tag_name = tag.name
-        self.children = [DOMElement(child) for child in tag.children if isinstance(child, Tag)]
+        self.children = [
+            DOMElement(child) for child in tag.children if isinstance(child, Tag)
+        ]
         self.attributes = dict(tag.attrs)
-        self.classes = tag.get('class', [])
+        self.classes = tag.get("class", [])
         self.text_content = tag.get_text(strip=True)
 
     def __repr__(self):
@@ -21,11 +23,15 @@ class DOMElement:
 
     def get_searchable_string(self):
         # Gather all searchable text from the element
-        texts = [self.tag_name] + self.classes + [str(value) for key, value in self.attributes.items()] + [
-            self.text_content]
-        return ' '.join(texts).strip()
+        texts = (
+            [self.tag_name]
+            + self.classes
+            + [str(value) for key, value in self.attributes.items()]
+            + [self.text_content]
+        )
+        return " ".join(texts).strip()
 
-    def search(self, query, threshold=75) -> list[tuple['DOMElement', int]]:
+    def search(self, query, threshold=75) -> list[tuple["DOMElement", int]]:
         matches = []
 
         # Search in the current element
@@ -43,5 +49,5 @@ class DOMElement:
 
 
 def build_dom_tree(html):
-    soup = BeautifulSoup(html.replace("\n", " "), 'html.parser')
+    soup = BeautifulSoup(html.replace("\n", " "), "html.parser")
     return DOMElement(soup)  # Assuming we want to start from the body tag
