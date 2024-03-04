@@ -5,7 +5,7 @@ from selenium.common import NoSuchElementException
 import logging
 
 from backend import Backend, LocalBackend
-from dom import build_dom_tree, DOMElement
+from dom import DOMElement
 
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -95,7 +95,9 @@ class HealingDriver:
         try:
             element = self.driver.find_element(by, value)
         except NoSuchElementException:
-            self._logger.error(f"Element with {by}='{value}' not found, trying to heal it")
+            self._logger.error(
+                f"Element with {by}='{value}' not found, trying to heal it"
+            )
             element = self.heal_element(value)
             return self.find_element(by, element.attributes["id"])
         else:
