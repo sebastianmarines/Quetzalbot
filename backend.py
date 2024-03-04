@@ -1,10 +1,16 @@
-class Backend:
+from abc import ABCMeta, abstractmethod
+
+
+class Backend(metaclass=ABCMeta):
+    @abstractmethod
     def __getitem__(self, element_id):
         pass
 
+    @abstractmethod
     def __setitem__(self, key, value):
         pass
 
+    @abstractmethod
     def __contains__(self, item):
         pass
 

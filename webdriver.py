@@ -9,6 +9,8 @@ from dom import build_dom_tree, DOMElement
 
 from selenium.webdriver.remote.webelement import WebElement
 
+from healer import Healer, FuzzyHealer
+
 
 def get_searchable_string(element: WebElement):
     tag_name = element.tag_name
@@ -21,8 +23,15 @@ def get_searchable_string(element: WebElement):
 class HealingDriver:
     _tree: DOMElement
     _backend: Backend
+    _healer: Healer
+    driver: webdriver.Chrome | webdriver.Firefox
 
-    def __init__(self, browser_name="chrome", backend: Backend = LocalBackend):
+    def __init__(
+        self,
+        browser_name="chrome",
+        backend: Backend = LocalBackend(),
+        healer: Healer = FuzzyHealer(),
+    ):
         if browser_name.lower() == "chrome":
             self.driver = webdriver.Chrome()
         elif browser_name.lower() == "firefox":
@@ -36,63 +45,66 @@ class HealingDriver:
         self._logger.addHandler(handler)
         self._logger.propagate = False
 
-        handler.setFormatter(colorlog.ColoredFormatter(
-            "%(log_color)s%(levelname)-8s%(reset)s %(white)s%(message)s",
-            datefmt=None,
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red,bg_white',
-            },
-            secondary_log_colors={},
-            style='%'
-        ))
+        handler.setFormatter(
+            colorlog.ColoredFormatter(
+                "%(log_color)s%(levelname)-8s%(reset)s %(white)s%(message)s",
+                datefmt=None,
+                reset=True,
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "red,bg_white",
+                },
+                secondary_log_colors={},
+                style="%",
+            )
+        )
 
-        self._logger.debug("Logger initialized")
+        self._backend = backend
+        self._healer = healer
+        self._healer.backend = self._backend
+        self._healer.driver = self.driver
 
-        self._backend = backend()
-
-    def heal_element(self, element_id: str):
+    def heal_element(self, element_id: str) -> DOMElement:
         if element_id in self._backend:
             self._logger.info(f"Element with id '{element_id}' found in cache")
-            body = self.driver.execute_script("return document.body.outerHTML")
-            self._tree = build_dom_tree(body)
-            previous_element = self._backend[element_id]
-            matches = self._tree.search(previous_element)
-            if matches:
-                self._logger.info(f"Element with id '{element_id}' found")
-                self._logger.info(f"{matches[0][0]=}")
-                new_id = matches[0][0].attributes["id"]
-                new_element = self.get_element_by_id(new_id)
-                # Cache the new element
-                self._backend[new_id] = get_searchable_string(new_element)
-                return new_element
-            else:
-                self._logger.error(f"Element with id '{element_id}' not found")
-                raise
+            html_body = self.driver.execute_script("return document.body.outerHTML")
+
+            previous_element = self._backend[
+                element_id
+            ]  # TODO: Currently is the searchable string
+
+            elements = self._healer.heal(element_id, previous_element, html_body)
+
+            if elements:
+                element, score = elements[0]
+                self._logger.info(
+                    f"Element with id '{element_id}' healed successfully"
+                    f"({score=})"
+                    f"({element=})"
+                )
+
+                return element
+
         else:
             self._logger.error(f"Healing failed for element with id '{element_id}'")
 
     def find_element(self, by: str = By.ID, value: str | None = None):
-        self._logger.info(f"Current URL: {self.driver.current_url}")
         try:
-            self.driver.find_element(by, value)
-        except NoSuchElementException as e:
-            self._logger.error(f"Element with {by}='{value}' not found"
-                               f"({e.msg})")
-            self.heal_element(value)
-        else:
-            self._logger.info(f"Element with {by}='{value}' found")
-
             element = self.driver.find_element(by, value)
+        except NoSuchElementException:
+            self._logger.error(f"Element with {by}='{value}' not found, trying to heal it")
+            element = self.heal_element(value)
+            return self.find_element(by, element.attributes["id"])
+        else:
             self._backend[value] = get_searchable_string(element)
             return element
 
     def get(self, url: str):
         self.driver.get(url)
+        self._logger.info(f"Current URL: {self.driver.current_url}")
 
     def __getattr__(self, attr):
         return getattr(self.driver, attr)
