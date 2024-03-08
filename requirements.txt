@@ -1,0 +1,6 @@
+selenium
+pytest
+colorlog
+bs4
+fuzzywuzzy
+# pip install -r requirements.txt
