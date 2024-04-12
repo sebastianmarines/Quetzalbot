@@ -3,12 +3,13 @@ from abc import ABCMeta, abstractmethod
 from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 
-from backend import Backend
-from dom import DOMElement, build_dom_tree
+from backends.backend import Backend
+from healers.dom import DOMElement, build_dom_tree
 
 
 class Healer(metaclass=ABCMeta):
     driver: webdriver.Chrome | webdriver.Firefox
+    backend: Backend
 
     @abstractmethod
     def heal(

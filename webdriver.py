@@ -3,18 +3,23 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
 import logging
+from typing import Optional
 
-from backend import Backend, LocalBackend
-from dom import DOMElement
+from backends.backend import Backend, LocalBackend
+from healers.dom import DOMElement
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from healer import Healer, FuzzyHealer
+from healers.healer import Healer, FuzzyHealer
 
 
 def get_searchable_string(element: WebElement):
     tag_name = element.tag_name
-    classes = element.get_attribute("class").split()
+    classes = element.get_attribute("class")
+    if classes is not None:
+        classes = classes.split()
+    else:
+        classes = []
     attributes = element.get_attribute("attributes")
     text_content = element.text
     return f"{tag_name} {' '.join(classes)} {attributes} {text_content}".strip()
@@ -82,8 +87,8 @@ class HealingDriver:
                 element, score = elements[0]
                 self._logger.info(
                     f"Element with id '{element_id}' healed successfully"
-                    f"({score=})"
-                    f"({element=})"
+                    f"\n({score=})"
+                    f"\n({element=})"
                 )
 
                 return element
@@ -91,13 +96,18 @@ class HealingDriver:
         else:
             self._logger.error(f"Healing failed for element with id '{element_id}'")
 
-    def find_element(self, by: str = By.ID, value: str | None = None):
+        raise ValueError(f"Element with id '{element_id}' not found in the new DOM tree")
+
+
+    def find_element(self, by: str = By.ID, value: Optional[str] = None):
         try:
             element = self.driver.find_element(by, value)
         except NoSuchElementException:
             self._logger.error(
                 f"Element with {by}='{value}' not found, trying to heal it"
             )
+            if value is None:
+                raise NoSuchElementException(f"Element with {by}='{value}' not found")
             element = self.heal_element(value)
             return self.find_element(by, element.attributes["id"])
         else:

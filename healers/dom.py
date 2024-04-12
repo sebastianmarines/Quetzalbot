@@ -14,7 +14,7 @@ class DOMElement:
         self.children = [
             DOMElement(child) for child in tag.children if isinstance(child, Tag)
         ]
-        self.attributes = dict(tag.attrs)
+        self.attributes = {k: v for k, v in tag.attrs.items() if k != "class"}
         self.classes = tag.get("class", [])
         self.text_content = tag.get_text(strip=True)
 
@@ -29,6 +29,7 @@ class DOMElement:
             + [str(value) for key, value in self.attributes.items()]
             + [self.text_content]
         )
+        print(texts)
         return " ".join(texts).strip()
 
     def search(self, query, threshold=75) -> list[tuple["DOMElement", int]]:
