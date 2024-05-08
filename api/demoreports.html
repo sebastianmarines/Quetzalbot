@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Self-Healing Automation</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="static/style2.css"
+    />
+  </head>
+  <body>
+    <div class="container-tittle">
+      <section>
+        <img src="static/logo.png" class="img-2" alt="Screenshot" />
+      </section>
+      <aside class="image-container">
+          <article>
+            <h2 class="mt-2">Self-Healing Automation</h2>
+            <a href="/download"  class="download" download>Download Reports</a>
+          </article>
+      </aside>
+    </div>
+    
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-3 bg-light">
+          <h5 class="mt-3">Reports</h5>
+          <ul class="list-group">
+              {% for row in reports %}
+              <a class="list-group-item" href="#{{ row['Change']['id'] }}">{{ row['Change']['sel_date'] }} - {{ row['Change']['sel_time'] }}</a>
+              {% endfor %}
+          </ul>
+        </div>
+        
+        <div class="col-md-9">
+          {% for row in reports %}
+          <div id="{{ row['Change']['id'] }}" class="report-item" style="display: none;">
+              <h4 class="mt-3">Healing Report <span>{{ row['Change']['sel_date'] }}</span> - {{ row['Change']['sel_time'] }}</h4>
+              <p>ELEMENT</p>
+              <pre>{{ row['Element']['tag_name'] }}</pre>
+              <p>Failed Locator: {{ row['Change']['failed_locator'] }}</p>
+              <p>Healed Locator: {{ row['Change']['healed_locator'] }}</p>
+              <p>Score: {{ row['Change']['score'] }}</p>
+              <div class="checkbox-container">
+                <input type="checkbox" id="report-checkbox-{{ row['Element']['id_element'] }}" class="report-checkbox"
+                       {% if row.Element.active %} checked {% endif %}>
+                <label for="report-checkbox-{{ row['Element']['id_element'] }}">Is the healing successful? {{ row.Element.active }}</label>
+              </div>
+
+            
+              <img
+                src= "{{ row['Change']['url_screenshot'] }}"
+                class="img-fluid"
+                style="width: 100%; height: auto"
+                alt="Screenshot"
+              />
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>    
+    
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var links = document.querySelectorAll(".list-group a");
+        var reportTitle = document.querySelector(".col-md-9 h4");
+        var reportDetails = document.querySelectorAll(".report-item");
+        
+        function updateTitle(id, text) {
+            document.getElementById(id).querySelector("h4").textContent = "Healing Report " + text;
+        }
+        
+        function hideAllReports() {
+            reportDetails.forEach(function(item) {
+                item.style.display = 'none';
+            });
+        }
+        
+        function showReport(id) {
+            hideAllReports();
+            var activeReport = document.getElementById(id);
+            if (activeReport) {
+                activeReport.style.display = 'block';
+            }
+        }
+        
+        links.forEach(function(link) {
+            link.addEventListener("click", function(e) {
+                e.preventDefault();
+        
+                links.forEach(function(item) {
+                    item.classList.remove("active");
+                });
+        
+                this.classList.add("active");
+        
+                var dateTime = this.textContent;
+                var elemId = this.getAttribute("href").substring(1);
+                updateTitle(elemId, dateTime);
+                
+                showReport(elemId);
+            });
+        });
+        
+        // Checkbox event handling
+        var checkboxes = document.querySelectorAll(".report-checkbox");
+        
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener("change", function() {
+                var elem_id = this.id.split('-')[2];
+                var isChecked = this.checked;
+                console.log(`${this.id}`);
+                fetch(`/newstatus/${elem_id}`,{
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({"success": isChecked})
+                })
+                if (this.checked) {
+                    console.log("Healing successful for report ID:", this.id.split('-')[2]);
+                } else {
+                    console.log("Healing unsuccessful for report ID:", this.id.split('-')[2]);
+                }
+            });
+        });
+
+     
+        // Show the first report by default
+        if (links.length > 0) {
+            links[0].click();
+        }
+
+      });
+    
+    </script>
+    
+  </body>
+</html>
