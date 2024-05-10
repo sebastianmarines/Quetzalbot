@@ -98,6 +98,16 @@ class HealingDriver:
 
         raise ValueError(f"Element with id '{element_id}' not found in the new DOM tree")
 
+    def heal_with_ML(self, element_id: str) -> DOMElement:
+        if element_id in self._backend:
+            self._logger.info(f"Element with id '{element_id}' found in cache")
+            html_body = self.driver.execute_script("return document.body.outerHTML")
+
+            previous_element = self._backend[
+                element_id
+            ]
+
+
 
     def find_element(self, by: str = By.ID, value: Optional[str] = None):
         try:

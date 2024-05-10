@@ -1,6 +1,7 @@
 from webdriver import HealingDriver
 from selenium.webdriver.common.by import By
 from pathlib import Path
+from backends.backend import RemoteBackend
 
 
 class TestHealingDriver:
@@ -56,3 +57,8 @@ class TestHealingDriver:
         self.driver.implicitly_wait(0.1)
         text = self.driver.find_element(By.ID, "text")
         assert text.text == "Found new button!"
+
+    def test_remote_backend(self):
+        remote_backend = RemoteBackend()
+        active_elements = remote_backend.get_active()
+        assert active_elements is not None

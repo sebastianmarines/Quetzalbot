@@ -19,6 +19,7 @@ from api.database_handling import (
 )
 import pandas as pd
 
+
 env = Environment(loader=FileSystemLoader("."))
 
 app = FastAPI()
