@@ -4,7 +4,7 @@ from typing import Tuple
 from fuzzywuzzy import fuzz
 from selenium import webdriver
 
-from backends.backend import Backend
+from backends import Backend
 from healers.dom import DOMElement
 
 

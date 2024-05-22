@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-from backends.backend import Backend, LocalBackend
+from backends import Backend, LocalBackend
 from healers.dom import DOMElement, build_dom_tree, from_web_element
 from healers.healer import FuzzyHealer, Healer
 
