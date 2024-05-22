@@ -1,7 +1,7 @@
 import logging
+from dataclasses import dataclass
 
 import colorlog
-from PIL import Image, ImageDraw
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -11,19 +11,28 @@ from healers.dom import DOMElement, build_dom_tree, from_web_element
 from healers.healer import FuzzyHealer, Healer
 
 
+@dataclass
+class Config:
+    screenshot_enabled = False
+    logging_level = logging.INFO
+
+
 class HealingDriver:
     _tree: DOMElement
     _backend: Backend
     _healer: Healer
     driver: webdriver.Chrome | webdriver.Firefox
+    config: Config
 
     def __init__(
-        self,
-        browser_name="chrome",
-        backend: Backend = LocalBackend(),
-        healer: Healer = FuzzyHealer(),
-        **kwargs,
+            self,
+            browser_name="chrome",
+            backend: Backend = LocalBackend(),
+            healer: Healer = FuzzyHealer(),
+            config: Config = Config(),
+            **kwargs,
     ):
+        self.config = config
         if browser_name.lower() == "chrome":
             self.driver = webdriver.Chrome(**kwargs)
         elif browser_name.lower() == "firefox":
@@ -32,7 +41,7 @@ class HealingDriver:
             raise ValueError(f'Browser "{browser_name}" is not supported!')
 
         self._logger = colorlog.getLogger(__name__)
-        colorlog.basicConfig(level=logging.INFO)
+        colorlog.basicConfig(level=config.logging_level)
         handler = colorlog.StreamHandler()
         self._logger.addHandler(handler)
         self._logger.propagate = False
@@ -88,7 +97,7 @@ class HealingDriver:
         )
 
     def find_element(
-        self, by: str = By.ID, value: str | None = None, *, healed: bool = False
+            self, by: str = By.ID, value: str | None = None, *, healed: bool = False
     ):
         try:
             element = self.driver.find_element(by, value)
@@ -106,7 +115,7 @@ class HealingDriver:
                 )
             return self.find_element(new_by, selector, healed=True)
         else:
-            if healed:
+            if healed and self.config.screenshot_enabled:
                 self._logger.info(
                     f"Taking screenshot of the element with selector {by} = '{value}'"
                 )
