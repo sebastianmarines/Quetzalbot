@@ -1,7 +1,9 @@
-from webdriver import HealingDriver
-from selenium.webdriver.common.by import By
 from pathlib import Path
+
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+
+from webdriver import HealingDriver
 
 
 class TestHealingDriver:

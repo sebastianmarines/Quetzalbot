@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
-from healers.dom import DOMElement, from_web_element
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+from healers.dom import DOMElement, from_web_element
 
 
 class TestDOMElement:

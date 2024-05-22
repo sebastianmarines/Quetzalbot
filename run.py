@@ -1,10 +1,10 @@
 import time
 from pathlib import Path
 
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 from webdriver import HealingDriver
-from selenium import webdriver
 
 # driver = HealingDriver()
 # driver = webdriver.Chrome()

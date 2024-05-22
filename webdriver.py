@@ -1,14 +1,14 @@
-import colorlog
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.common import NoSuchElementException
 import logging
+
+import colorlog
+from PIL import Image, ImageDraw
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.by import By
 
 from backends.backend import Backend, LocalBackend
 from healers.dom import DOMElement, build_dom_tree, from_web_element
-
-
-from healers.healer import Healer, FuzzyHealer
+from healers.healer import FuzzyHealer, Healer
 
 
 class HealingDriver:
@@ -66,7 +66,7 @@ class HealingDriver:
 
             previous_element = self._backend[
                 element_selector
-            ]  # TODO: Currently is the searchable string
+            ]
 
             dom_tree = build_dom_tree(html_body)
             element, score = self._healer.heal(previous_element, dom_tree)
@@ -87,7 +87,9 @@ class HealingDriver:
             f"Element with id '{element_selector}' not found in the new DOM tree"
         )
 
-    def find_element(self, by: str = By.ID, value: str | None = None):
+    def find_element(
+        self, by: str = By.ID, value: str | None = None, *, healed: bool = False
+    ):
         try:
             element = self.driver.find_element(by, value)
         except NoSuchElementException:
@@ -102,8 +104,26 @@ class HealingDriver:
                 self._logger.warning(
                     f"Selector changed from {by}='{value}' to {new_by}='{selector}'"
                 )
-            return self.find_element(new_by, selector)
+            return self.find_element(new_by, selector, healed=True)
         else:
+            if healed:
+                self._logger.info(
+                    f"Taking screenshot of the element with selector {by} = '{value}'"
+                )
+                outline_style = self.driver.execute_script(
+                    "return arguments[0].style.outline", element
+                )
+                self.driver.execute_script(
+                    "arguments[0].style.outline = '#f00 solid 5px';", element
+                )
+                screenshot_path = "screenshot.png"
+                self.driver.save_screenshot(screenshot_path)
+                self.driver.execute_script(
+                    "arguments[0].style.outline = arguments[1];", element, outline_style
+                )
+
+                # TODO: Save the screenshot in the backend
+
             self._backend[value] = from_web_element(element)
             return element
 

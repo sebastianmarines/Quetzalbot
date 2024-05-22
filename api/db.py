@@ -1,6 +1,7 @@
-from sqlmodel import Field, Relationship, Session, SQLModel, create_engine
-from typing import Optional
 from datetime import date, time
+from typing import Optional
+
+from sqlmodel import Field, Relationship, Session, SQLModel, create_engine
 
 
 class User(SQLModel, table=True):

@@ -1,6 +1,8 @@
-from sqlmodel import Session, create_engine, select
-from api.db import Change, Page, Element, Attribute
 from datetime import datetime
+
+from sqlmodel import Session, create_engine, select
+
+from api.db import Attribute, Change, Element, Page
 
 sqlite_file_name = "database.db"
 db_url = f"sqlite:///{sqlite_file_name}"
