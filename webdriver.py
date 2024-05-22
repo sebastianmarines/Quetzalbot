@@ -6,7 +6,7 @@ import logging
 from typing import Optional
 
 from backends.backend import Backend, LocalBackend
-from healers.dom import DOMElement
+from healers.dom import DOMElement, build_dom_tree, from_web_element
 
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -36,11 +36,12 @@ class HealingDriver:
         browser_name="chrome",
         backend: Backend = LocalBackend(),
         healer: Healer = FuzzyHealer(),
+        **kwargs,
     ):
         if browser_name.lower() == "chrome":
-            self.driver = webdriver.Chrome()
+            self.driver = webdriver.Chrome(**kwargs)
         elif browser_name.lower() == "firefox":
-            self.driver = webdriver.Firefox()
+            self.driver = webdriver.Firefox(**kwargs)
         else:
             raise ValueError(f'Browser "{browser_name}" is not supported!')
 
@@ -72,34 +73,35 @@ class HealingDriver:
         self._healer.backend = self._backend
         self._healer.driver = self.driver
 
-    def heal_element(self, element_id: str) -> DOMElement:
-        if element_id in self._backend:
-            self._logger.info(f"Element with id '{element_id}' found in cache")
+    def heal_element(self, element_selector: str) -> DOMElement:
+        if element_selector in self._backend:
+            self._logger.info(f"Element with id '{element_selector}' found in cache")
             html_body = self.driver.execute_script("return document.body.outerHTML")
 
             previous_element = self._backend[
-                element_id
+                element_selector
             ]  # TODO: Currently is the searchable string
 
-            elements = self._healer.heal(element_id, previous_element, html_body)
+            dom_tree = build_dom_tree(html_body)
+            element, score = self._healer.heal(previous_element, dom_tree)
+            self._logger.info(
+                f"Element with id '{element_selector}' healed successfully"
+                f"\n({score=})"
+                f"\n({element=})"
+            )
 
-            if elements:
-                element, score = elements[0]
-                self._logger.info(
-                    f"Element with id '{element_id}' healed successfully"
-                    f"\n({score=})"
-                    f"\n({element=})"
-                )
-
-                return element
+            return element
 
         else:
-            self._logger.error(f"Healing failed for element with id '{element_id}'")
+            self._logger.error(
+                f"Healing failed for element with id '{element_selector}'"
+            )
 
-        raise ValueError(f"Element with id '{element_id}' not found in the new DOM tree")
+        raise ValueError(
+            f"Element with id '{element_selector}' not found in the new DOM tree"
+        )
 
-
-    def find_element(self, by: str = By.ID, value: Optional[str] = None):
+    def find_element(self, by: str = By.ID, value: str | None = None):
         try:
             element = self.driver.find_element(by, value)
         except NoSuchElementException:
@@ -109,9 +111,14 @@ class HealingDriver:
             if value is None:
                 raise NoSuchElementException(f"Element with {by}='{value}' not found")
             element = self.heal_element(value)
-            return self.find_element(by, element.attributes["id"])
+            new_by, selector = element.get_best_selector()
+            if new_by != by:
+                self._logger.warning(
+                    f"Selector changed from {by}='{value}' to {new_by}='{selector}'"
+                )
+            return self.find_element(new_by, selector)
         else:
-            self._backend[value] = get_searchable_string(element)
+            self._backend[value] = from_web_element(element)
             return element
 
     def get(self, url: str):

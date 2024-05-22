@@ -1,13 +1,16 @@
 from webdriver import HealingDriver
 from selenium.webdriver.common.by import By
 from pathlib import Path
+from selenium.webdriver.chrome.options import Options
 
 
 class TestHealingDriver:
     driver: HealingDriver
 
     def setup_method(self):
-        self.driver = HealingDriver()
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        self.driver = HealingDriver(options=chrome_options)
 
     def teardown_method(self):
         self.driver.quit()
