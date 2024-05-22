@@ -4,15 +4,15 @@ from abc import ABCMeta, abstractmethod
 class Backend(metaclass=ABCMeta):
     @abstractmethod
     def __getitem__(self, element_id):
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def __setitem__(self, key, value):
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def __contains__(self, item):
-        pass
+        pass  # pragma: no cover
 
 
 class LocalBackend(Backend):

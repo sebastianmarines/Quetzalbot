@@ -3,26 +3,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
 import logging
-from typing import Optional
 
 from backends.backend import Backend, LocalBackend
 from healers.dom import DOMElement, build_dom_tree, from_web_element
 
-from selenium.webdriver.remote.webelement import WebElement
 
 from healers.healer import Healer, FuzzyHealer
-
-
-def get_searchable_string(element: WebElement):
-    tag_name = element.tag_name
-    classes = element.get_attribute("class")
-    if classes is not None:
-        classes = classes.split()
-    else:
-        classes = []
-    attributes = element.get_attribute("attributes")
-    text_content = element.text
-    return f"{tag_name} {' '.join(classes)} {attributes} {text_content}".strip()
 
 
 class HealingDriver:
