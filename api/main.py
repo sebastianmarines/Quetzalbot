@@ -48,7 +48,7 @@ class Report(BaseModel):
     attributes: List[str]
 
 
-@app.get("/change", response_model=List[Report])
+@app.post("/change", response_model=List[Report])
 async def receive_report(report: Report):
     saved_page = save_page(report.current_url)
     saved_element = save_element(
