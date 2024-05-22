@@ -17,16 +17,6 @@ class TestDOMElement:
         assert self.dom_element.classes == ["button", "btn"]
         assert self.dom_element.text_content == "Hello"
 
-    def test_get_searchable_string(self):
-        searchable_string = self.dom_element.get_searchable_string()
-        assert searchable_string == "div button btn 1 Hello"
-
-    def test_search(self):
-        matches = self.dom_element.search("Hello")
-        assert len(matches) == 1
-        assert matches[0][0] == self.dom_element
-        assert matches[0][1] >= 75
-
     def test_generate_css_selector(self):
         selector = self.dom_element._build_css_selector()
         assert selector == "div.button.btn"

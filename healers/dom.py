@@ -30,33 +30,6 @@ class DOMElement:
             f"attributes={self.attributes}, classes={self.classes}, parent={self.parent.tag_name if self.parent else None})"
         )
 
-    def get_searchable_string(self):
-        # Gather all searchable text from the element
-        texts = (
-            [self.tag_name]
-            + self.classes
-            + [str(value) for key, value in self.attributes.items()]
-            + [self.text_content]
-        )
-        print(texts)
-        return " ".join(texts).strip()
-
-    def search(self, query, threshold=50) -> list[tuple["DOMElement", int]]:
-        matches = []
-
-        # Search in the current element
-        current_string = self.get_searchable_string()
-        score = fuzz.partial_ratio(query.lower(), current_string.lower())
-        if score >= threshold:
-            matches.append((self, score))
-
-        # Recursive search in children
-        for child in self.children:
-            matches.extend(child.search(query, threshold))
-
-        # Return all matches ordered by their score
-        return sorted(matches, key=lambda x: x[1], reverse=True)
-
     def get_best_selector(self) -> (By, str):
         if self.tag_name in ["body", "html"]:
             return By.TAG_NAME, self.tag_name
