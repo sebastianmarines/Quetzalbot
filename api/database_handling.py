@@ -31,8 +31,9 @@ def save_element(
     with Session(engine) as session:
         session.add(new_element)
         session.commit()
+        session.refresh(new_element)
 
-    return new_element.id_element
+        return new_element.id_element
 
 
 def save_attributes(attributes, saved_element):

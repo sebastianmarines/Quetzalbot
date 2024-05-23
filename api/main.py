@@ -1,3 +1,5 @@
+import logging
+from datetime import datetime
 from typing import List
 
 import pandas as pd
@@ -5,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
-from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from api.database_handling import (
@@ -17,6 +18,9 @@ from api.database_handling import (
     save_status,
 )
 from api.db import Change, Element
+from api.models import Report, StatusUpdate
+
+logger = logging.getLogger(__name__)
 
 env = Environment(loader=FileSystemLoader("."))
 
@@ -25,7 +29,7 @@ app.mount("/static", StaticFiles(directory="styles"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def new_app():
+async def index():
     with Session(engine) as session:
         statement = select(Change, Element).join(Element, isouter=True)
         reports = session.exec(statement).fetchall()
@@ -34,45 +38,34 @@ async def new_app():
         return HTMLResponse(content=output)
 
 
-class Report(BaseModel):
-    current_url: str
-    element_tag: str
-    element_classes: List[str]
-    element_text: str
-    element_selector: str
-    change_failed: str
-    change_healed: str
-    change_score: str
-    url_screenshot: str
-    attributes: List[str]
-
-
-@app.post("/change", response_model=List[Report])
+@app.post("/change", response_model=Report)
 async def receive_report(report: Report):
-    saved_page = save_page(report.current_url)
+    # saved_page = save_page(report.current_url)
     saved_element = save_element(
         report.element_tag,
         report.element_classes,
         report.element_text,
         report.element_selector,
-        saved_page,
+        1,
     )
     save_attributes(report.attributes, saved_element)
-    save_change(
-        report.change_failed,
-        report.change_healed,
-        report.change_score,
-        report.url_screenshot,
-        saved_element,
-    )
+    if report.change_healed:
+        save_change(
+            report.change_failed,
+            report.change_healed,
+            report.change_score,
+            report.url_screenshot,
+            saved_element,
+        )
+
+    return report
 
 
-class StatusUpdate(BaseModel):
-    success: bool
-
-
-@app.put("/newstatus/{elem_id}")
+@app.put("/new_status/{elem_id}")
 async def update_status(elem_id: int, status_update: StatusUpdate):
+    """
+    Enable or disable an element in the database
+    """
     with Session(engine) as session:
         element = session.get(Element, elem_id)
         if element:
@@ -115,19 +108,9 @@ async def download_csv():
     return response
 
 
-@app.get("/fetchActive")
-async def send_active():
+@app.get("/fetch_active")
+async def fetch_active() -> list[Element]:
     with Session(engine) as session:
         statement = select(Element).where(Element.active == 1)
         elements = session.exec(statement).fetchall()
-        active_elements = [
-            {
-                "id": element.id_element,
-                "tag_name": element.tag_name,
-                "classes": element.tag_name,
-                "text_content": element.text_content,
-                "page": element.page_id,
-            }
-            for element in elements
-        ]
-    return active_elements
+    return elements

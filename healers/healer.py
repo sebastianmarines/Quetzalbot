@@ -5,7 +5,7 @@ from fuzzywuzzy import fuzz
 from selenium import webdriver
 
 from backends import Backend
-from healers.dom import DOMElement
+from utils.dom import DOMElement
 
 
 class Healer(metaclass=ABCMeta):

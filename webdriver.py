@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import dataclass
 
 import colorlog
@@ -6,14 +7,15 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-from backends import Backend, LocalBackend
-from healers.dom import DOMElement, build_dom_tree, from_web_element
+from backends import Backend, LocalBackend, RemoteBackend
 from healers.healer import FuzzyHealer, Healer
+from utils import generate_random_filename
+from utils.dom import DOMElement, build_dom_tree, from_web_element_to_backend_element
 
 
 @dataclass
 class Config:
-    screenshot_enabled = False
+    screenshot_enabled = True
     logging_level = logging.INFO
 
 
@@ -25,12 +27,12 @@ class HealingDriver:
     config: Config
 
     def __init__(
-            self,
-            browser_name="chrome",
-            backend: Backend = LocalBackend(),
-            healer: Healer = FuzzyHealer(),
-            config: Config = Config(),
-            **kwargs,
+        self,
+        browser_name="chrome",
+        backend: Backend = RemoteBackend(),
+        healer: Healer = FuzzyHealer(),
+        config: Config = Config(),
+        **kwargs,
     ):
         self.config = config
         if browser_name.lower() == "chrome":
@@ -73,9 +75,7 @@ class HealingDriver:
             self._logger.info(f"Element with id '{element_selector}' found in cache")
             html_body = self.driver.execute_script("return document.body.outerHTML")
 
-            previous_element = self._backend[
-                element_selector
-            ]
+            previous_element = self._backend[element_selector]
 
             dom_tree = build_dom_tree(html_body)
             element, score = self._healer.heal(previous_element, dom_tree)
@@ -97,7 +97,7 @@ class HealingDriver:
         )
 
     def find_element(
-            self, by: str = By.ID, value: str | None = None, *, healed: bool = False
+        self, by: str = By.ID, value: str | None = None, *, healed: bool = False
     ):
         try:
             element = self.driver.find_element(by, value)
@@ -115,6 +115,8 @@ class HealingDriver:
                 )
             return self.find_element(new_by, selector, healed=True)
         else:
+            screenshot: bytes | None = None
+            screenshot_path = generate_random_filename()
             if healed and self.config.screenshot_enabled:
                 self._logger.info(
                     f"Taking screenshot of the element with selector {by} = '{value}'"
@@ -125,15 +127,21 @@ class HealingDriver:
                 self.driver.execute_script(
                     "arguments[0].style.outline = '#f00 solid 5px';", element
                 )
-                screenshot_path = "screenshot.png"
                 self.driver.save_screenshot(screenshot_path)
                 self.driver.execute_script(
                     "arguments[0].style.outline = arguments[1];", element, outline_style
                 )
 
-                # TODO: Save the screenshot in the backend
+                with open(screenshot_path, "rb") as f:
+                    screenshot = f.read()
 
-            self._backend[value] = from_web_element(element)
+            value_to_save = from_web_element_to_backend_element(element)
+            value_to_save.healed = healed
+            if screenshot:
+                value_to_save.screenshot_bytes = screenshot
+                os.remove(screenshot_path)
+
+            self._backend[value] = value_to_save
             return element
 
     def get(self, url: str):

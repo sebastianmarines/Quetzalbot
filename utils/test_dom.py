@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from healers.dom import DOMElement, from_web_element
+from .dom import DOMElement, from_web_element_to_backend_element
 
 
 class TestDOMElement:
@@ -36,5 +36,5 @@ class TestDOMElement:
         driver = webdriver.Chrome(options=chrome_options)
         driver.get("data:text/html," + html)
         element = driver.find_element("id", "btn")
-        result = from_web_element(element)
+        result = from_web_element_to_backend_element(element)
         assert result.tag_name == "button"

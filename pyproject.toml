@@ -1,6 +1,7 @@
 [tool.isort]
 profile = "black"
 
+
 [tool.poetry]
 name = "qa-framework"
 version = "0.1.0"
@@ -21,6 +22,8 @@ jinja2 = "^3.1.4"
 pandas = "^2.2.2"
 coverage = "^7.5.1"
 pillow = "^10.3.0"
+boto3 = "^1.34.111"
+requests = "^2.32.2"
 
 
 [tool.poetry.group.dev.dependencies]

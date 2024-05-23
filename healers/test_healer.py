@@ -1,7 +1,7 @@
 from bs4 import Tag
 
-from healers.dom import DOMElement, build_dom_tree
 from healers.healer import FuzzyHealer
+from utils.dom import DOMElement, build_dom_tree
 
 
 class TestHealer:

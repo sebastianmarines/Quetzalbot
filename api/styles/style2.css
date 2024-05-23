@@ -1,3 +1,5 @@
+/* style2.css */
+
 .custom-control-input:checked~.custom-control-label::before {
     color: #fff;
     border-color: #11780f !important;
@@ -17,10 +19,9 @@ label {
     margin-top: 3.25rem;
 }
 
-
 .container-tittle {
     display: flex;
-    align-items: center; 
+    align-items: center;
     height: 80px;
     background-color: #f8f9fa;
 }
@@ -43,21 +44,20 @@ aside {
     padding: 10px;
 }
 
-
 .list-group a:hover {
     background-color: #aeb2ae;
     color: #f2f2f2;
     text-decoration: none;
-  }
- 
+}
+
 .list-group a {
     color: #383636;
-  }
+}
 
-.list-group-item a.list-group-item active {
+.list-group-item a.list-group-item.active {
     background-color: #e8eaef;
     color: white;
-  }
+}
 
 a {
     color: #60656b;
@@ -65,4 +65,7 @@ a {
     background-color: transparent;
 }
 
-
+.reports-column {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}
