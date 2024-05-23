@@ -50,6 +50,7 @@ class BackendDOMElement(DOMElement):
     screenshot_bytes: bytes | None
     screenshot_url: str | None
     healed = False
+    failed_locator: str | None
 
     def __init__(
         self, tag: Tag, screenshot: bytes | None = None, parent: "DOMElement" = None

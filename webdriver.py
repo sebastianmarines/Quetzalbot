@@ -137,6 +137,7 @@ class HealingDriver:
 
             value_to_save = from_web_element_to_backend_element(element)
             value_to_save.healed = healed
+            value_to_save.failed_locator = f"{by}={value}"
             if screenshot:
                 value_to_save.screenshot_bytes = screenshot
                 os.remove(screenshot_path)

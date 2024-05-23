@@ -16,6 +16,8 @@ class RemoteBackend(Backend):
         self.s3_client = boto3.client("s3")
         self.cache = {}
 
+    def _fetch(self): ...
+
     def __getitem__(self, element_id) -> BackendDOMElement:
         return self.cache.get(element_id)
 
@@ -36,7 +38,7 @@ class RemoteBackend(Backend):
             element_classes=value.classes,
             element_text=value.text_content,
             element_selector=value.get_best_selector()[1],
-            change_failed="null",
+            change_failed=value.failed_locator,
             change_healed=value.healed,
             change_score=0.75,
             attributes=list(value.attributes.keys()),

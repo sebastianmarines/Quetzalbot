@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from api.database_handling import (
     engine,
@@ -23,6 +23,7 @@ from api.models import Report, StatusUpdate
 logger = logging.getLogger(__name__)
 
 env = Environment(loader=FileSystemLoader("."))
+env.filters["fmt_time"] = lambda v: str(v).split(".")[0]
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="styles"), name="static")
@@ -31,9 +32,14 @@ app.mount("/static", StaticFiles(directory="styles"), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def index():
     with Session(engine) as session:
-        statement = select(Change, Element).join(Element, isouter=True)
+        statement = (
+            select(Change, Element)
+            .order_by(col(Change.sel_date).desc())
+            .order_by(col(Change.sel_time).desc())
+            .join(Element, isouter=True)
+        )
         reports = session.exec(statement).fetchall()
-        template = env.get_template("demoreports.html")
+        template = env.get_template("dashboard.html.jinja2")
         output = template.render(reports=reports)
         return HTMLResponse(content=output)
 
