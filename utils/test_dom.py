@@ -37,4 +37,5 @@ class TestDOMElement:
         driver.get("data:text/html," + html)
         element = driver.find_element("id", "btn")
         result = from_web_element_to_backend_element(element)
+        driver.quit()
         assert result.tag_name == "button"
