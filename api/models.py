@@ -8,7 +8,7 @@ class Report(BaseModel):
     element_text: str
     element_selector: str
     change_failed: str
-    change_healed: bool
+    change_healed: str
     change_score: float
     url_screenshot: str
     attributes: list[str]

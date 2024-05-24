@@ -44,6 +44,13 @@ async def index():
         return HTMLResponse(content=output)
 
 
+@app.get("/{elem_id}", response_model=Element)
+async def get_element(elem_id: int):
+    with Session(engine) as session:
+        element = session.get(Element, elem_id)
+        return element
+
+
 @app.post("/change", response_model=Report)
 async def receive_report(report: Report):
     # saved_page = save_page(report.current_url)

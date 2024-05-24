@@ -27,12 +27,12 @@ class HealingDriver:
     config: Config
 
     def __init__(
-        self,
-        browser_name="chrome",
-        backend: Backend = RemoteBackend(),
-        healer: Healer = FuzzyHealer(),
-        config: Config = Config(),
-        **kwargs,
+            self,
+            browser_name="chrome",
+            backend: Backend = RemoteBackend(),
+            healer: Healer = FuzzyHealer(),
+            config: Config = Config(),
+            **kwargs,
     ):
         self.config = config
         if browser_name.lower() == "chrome":
@@ -97,7 +97,8 @@ class HealingDriver:
         )
 
     def find_element(
-        self, by: str = By.ID, value: str | None = None, *, healed: bool = False
+            self, by: str = By.ID, value: str | None = None, *, healed: bool = False,
+            original_locator: str | None = None
     ):
         try:
             element = self.driver.find_element(by, value)
@@ -113,7 +114,7 @@ class HealingDriver:
                 self._logger.warning(
                     f"Selector changed from {by}='{value}' to {new_by}='{selector}'"
                 )
-            return self.find_element(new_by, selector, healed=True)
+            return self.find_element(new_by, selector, healed=True, original_locator=f"{by}={value}")
         else:
             screenshot: bytes | None = None
             screenshot_path = generate_random_filename()
@@ -137,7 +138,8 @@ class HealingDriver:
 
             value_to_save = from_web_element_to_backend_element(element)
             value_to_save.healed = healed
-            value_to_save.failed_locator = f"{by}={value}"
+            value_to_save.new_locator = f"{by}={value}"
+            value_to_save.failed_locator = original_locator if healed else ""
             if screenshot:
                 value_to_save.screenshot_bytes = screenshot
                 os.remove(screenshot_path)

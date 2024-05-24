@@ -1,4 +1,3 @@
-import time
 from pathlib import Path
 
 from selenium import webdriver
@@ -6,8 +5,6 @@ from selenium.webdriver.common.by import By
 
 from webdriver import HealingDriver
 
-# driver = HealingDriver()
-# driver = webdriver.Chrome()
 nodeURL = "http://localhost:8085"
 
 options = webdriver.ChromeOptions()

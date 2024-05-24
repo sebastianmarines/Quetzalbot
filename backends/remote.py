@@ -39,7 +39,7 @@ class RemoteBackend(Backend):
             element_text=value.text_content,
             element_selector=value.get_best_selector()[1],
             change_failed=value.failed_locator,
-            change_healed=value.healed,
+            change_healed=value.new_locator,
             change_score=0.75,
             attributes=list(value.attributes.keys()),
             url_screenshot=screenshot_url,
