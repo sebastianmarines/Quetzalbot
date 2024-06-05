@@ -47,7 +47,7 @@ def save_attributes(attributes, saved_element):
 def save_change(
     change_failed, change_healed, change_score, url_screenshot, saved_element
 ):
-    new_chage = Change(
+    new_change = Change(
         sel_date=datetime.now().date(),
         sel_time=datetime.now().time(),
         failed_locator=change_failed,
@@ -57,7 +57,7 @@ def save_change(
         elem_id=saved_element,
     )
     with Session(engine) as session:
-        session.add(new_chage)
+        session.add(new_change)
         session.commit()
 
 

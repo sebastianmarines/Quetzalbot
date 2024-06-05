@@ -1,6 +1,4 @@
 import logging
-from datetime import datetime
-from typing import List
 
 import pandas as pd
 from fastapi import FastAPI
@@ -9,16 +7,13 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from sqlmodel import Session, col, select
 
-from api.database_handling import (
-    engine,
-    save_attributes,
-    save_change,
-    save_element,
-    save_page,
-    save_status,
-)
+from api.database_handling import engine, save_attributes, save_change, save_element
 from api.db import Change, Element
 from api.models import Report, StatusUpdate
+
+from .utils import send_notification
+
+EMAIL = "sebastian0marines@gmail.com"
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +48,6 @@ async def get_element(elem_id: int):
 
 @app.post("/change", response_model=Report)
 async def receive_report(report: Report):
-    # saved_page = save_page(report.current_url)
     saved_element = save_element(
         report.element_tag,
         report.element_classes,
@@ -70,6 +64,7 @@ async def receive_report(report: Report):
             report.url_screenshot,
             saved_element,
         )
+        send_notification(EMAIL, report)
 
     return report
 
