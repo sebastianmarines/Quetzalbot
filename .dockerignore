@@ -1,0 +1,9 @@
+*
+
+!api/
+!poetry.lock
+!pyproject.toml
+!.dockerignore
+!Dockerfile
+
+**/*.db
