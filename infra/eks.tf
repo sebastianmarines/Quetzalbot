@@ -1,5 +1,22 @@
 data "aws_availability_zones" "available" {}
 data "aws_ecrpublic_authorization_token" "token" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_policy" "alb" {
+  name        = "ALBIngressControllerIAMPolicy"
+  description = "IAM policy for ALB Ingress Controller"
+  policy      = file("${path.module}/policies/alb-ingress-controller.json")
+}
+
+resource "aws_iam_policy" "alb_2" {
+  name   = "ALBIngressControllerIAMPolicy2"
+  policy = file("${path.module}/policies/iam_policy.json")
+}
+
+resource "aws_iam_policy" "route53" {
+  name   = "Route53Policy"
+  policy = file("${path.module}/policies/route53.json")
+}
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -21,6 +38,12 @@ module "eks" {
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
+
+  iam_role_additional_policies = {
+    additional = aws_iam_policy.alb.arn
+    additional = aws_iam_policy.alb_2.arn
+    additional = aws_iam_policy.route53.arn
+  }
 
   eks_managed_node_groups = {
     karpenter = {
@@ -69,7 +92,9 @@ module "karpenter" {
   create_pod_identity_association = true
 
   node_iam_role_additional_policies = {
-    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    AmazonSSMManagedInstanceCore  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    ALBIngressControllerIAMPolicy = aws_iam_policy.alb.arn
+    Route53Policy                 = aws_iam_policy.route53.arn
   }
 }
 
@@ -197,3 +222,24 @@ resource "kubectl_manifest" "karpenter_example_deployment" {
   ]
 }
 
+resource "helm_release" "alb_ingress_controller" {
+  namespace        = "kube-system"
+  name             = "alb-ingress-controller"
+  repository       = "https://aws.github.io/eks-charts"
+  chart            = "aws-load-balancer-controller"
+  create_namespace = true
+  wait             = false
+
+  values = [
+    <<-EOT
+        clusterName: ${module.eks.cluster_name}
+        vpcId: ${module.vpc.vpc_id}
+        region: ${data.aws_region.current.name}
+        EOT
+  ]
+}
+
+resource "kubectl_manifest" "external_dns" {
+  yaml_body  = file("${path.module}/manifests/externaldns.yaml")
+  depends_on = [aws_acm_certificate_validation.cert]
+}
