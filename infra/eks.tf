@@ -50,8 +50,8 @@ module "eks" {
       instance_types = ["m7a.medium"]
 
       min_size     = 1
-      max_size     = 3
-      desired_size = 2
+      max_size     = 2
+      desired_size = 1
 
       taints = {
         addons = {
@@ -168,16 +168,19 @@ resource "kubectl_manifest" "karpenter_node_pool" {
           requirements:
             - key: "karpenter.k8s.aws/instance-category"
               operator: In
-              values: ["c", "m", "r"]
+              values: ["m"]
             - key: "karpenter.k8s.aws/instance-cpu"
               operator: In
-              values: ["4", "8", "16", "32"]
+              values: ["4", "8"]
             - key: "karpenter.k8s.aws/instance-hypervisor"
               operator: In
               values: ["nitro"]
             - key: "karpenter.k8s.aws/instance-generation"
               operator: Gt
               values: ["2"]
+            - key: "kubernetes.io/arch"
+              operator: In
+              values: ["amd64"]
       limits:
         cpu: 1000
       disruption:
