@@ -3,9 +3,9 @@ from datetime import datetime
 from sqlmodel import Session, create_engine, select
 
 from api.db import Attribute, Change, Element, Page
+from api.settings import Settings
 
-sqlite_file_name = "database.db"
-db_url = f"sqlite:///{sqlite_file_name}"
+db_url = Settings().db_url
 engine = create_engine(db_url, echo=True)
 
 

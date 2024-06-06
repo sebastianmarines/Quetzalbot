@@ -2,6 +2,7 @@ from datetime import date, time
 from typing import Optional
 
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine
+from api.settings import Settings
 
 
 class User(SQLModel, table=True):
@@ -44,10 +45,9 @@ class Change(SQLModel, table=True):
     elem_id: Optional[int] = Field(default=None, foreign_key="element.id_element")
 
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+db_url = Settings().db_url
 
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(db_url, echo=True)
 
 
 def create_db_and_tables():
