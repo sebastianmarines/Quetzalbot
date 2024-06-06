@@ -40,8 +40,18 @@ module "eks" {
     }
   }
 
+  node_security_group_tags = {
+    "kubernetes.io/cluster/${local.name}" = null
+  }
+
   tags = {
     "karpenter.sh/discovery" = local.name
+  }
+}
+
+resource "kubernetes_namespace" "app" {
+  metadata {
+    name = "app"
   }
 }
 
