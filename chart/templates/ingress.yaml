@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-{{ .Values.name }}
+  namespace: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.domain }}
+    alb.ingress.kubernetes.io/load-balancer-name: {{ .Values.name }}-alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.certificateArn }}
+spec:
+  ingressClassName: alb
+  defaultBackend:
+    service:
+      name: {{ .Values.name }}-nodeport-service
+      port:
+        number: 8000
+  rules:
+    - host: {{ .Values.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.name }}-nodeport-service
+                port:
+                  number: 8000

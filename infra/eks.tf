@@ -70,7 +70,7 @@ module "eks" {
       instance_types = ["m7a.medium"]
 
       min_size     = 1
-      max_size     = 1
+      max_size     = 2
       desired_size = 1
 
       taints = {
