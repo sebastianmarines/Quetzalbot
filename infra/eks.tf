@@ -18,6 +18,26 @@ resource "aws_iam_policy" "route53" {
   policy = file("${path.module}/policies/route53.json")
 }
 
+resource "aws_iam_policy" "ses" {
+  name = "SESPolicy"
+  policy = jsonencode(
+    {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "ses:SendEmail",
+            "ses:SendRawEmail",
+            "ses:SendTemplatedEmail",
+          ]
+          Resource = "*"
+        },
+      ]
+    }
+  )
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.13.1"
@@ -72,12 +92,6 @@ module "eks" {
   }
 }
 
-resource "kubernetes_namespace" "app" {
-  metadata {
-    name = "app"
-  }
-}
-
 ################################################################################
 # Karpenter
 ################################################################################
@@ -95,6 +109,7 @@ module "karpenter" {
     AmazonSSMManagedInstanceCore  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     ALBIngressControllerIAMPolicy = aws_iam_policy.alb.arn
     Route53Policy                 = aws_iam_policy.route53.arn
+    SESPolicy                     = aws_iam_policy.ses.arn
   }
 }
 
@@ -137,7 +152,7 @@ resource "kubectl_manifest" "karpenter_node_class" {
     metadata:
       name: default
     spec:
-      amiFamily: AL2
+      amiFamily: AL2023
       role: ${module.karpenter.node_iam_role_name}
       subnetSelectorTerms:
         - tags:
@@ -243,6 +258,6 @@ resource "helm_release" "alb_ingress_controller" {
 }
 
 resource "kubectl_manifest" "external_dns" {
-  yaml_body  = file("${path.module}/manifests/externaldns.yaml")
+  yaml_body  = file("${path.module}/manifests/external-dns.yaml")
   depends_on = [aws_acm_certificate_validation.cert]
 }
