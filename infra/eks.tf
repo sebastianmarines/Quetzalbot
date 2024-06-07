@@ -295,8 +295,6 @@ resource "kubernetes_secret" "db" {
       jsondecode(data.aws_secretsmanager_secret_version.master.secret_string)["password"],
       "@",
       module.db.db_instance_endpoint,
-      ":",
-      module.db.db_instance_port,
       "/",
       local.name
     ])
