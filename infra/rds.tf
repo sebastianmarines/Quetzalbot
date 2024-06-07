@@ -16,8 +16,10 @@ module "db" {
   create_db_subnet_group = true
   subnet_ids             = module.vpc.private_subnets
 
-  manage_master_user_password = true
-  vpc_security_group_ids      = [module.db_sg.security_group_id]
+  manage_master_user_password                            = true
+  manage_master_user_password_rotation                   = true
+  master_user_password_rotation_automatically_after_days = 1000
+  vpc_security_group_ids                                 = [module.db_sg.security_group_id]
 }
 
 module "db_sg" {
@@ -35,4 +37,12 @@ module "db_sg" {
       source_security_group_id = module.eks.node_security_group_id
     }
   ]
+}
+
+resource "aws_secretsmanager_secret" "db" {
+  name = "${local.name}-db-connection-string"
+}
+
+data "aws_secretsmanager_secret_version" "master" {
+  secret_id = module.db.db_instance_master_user_secret_arn
 }

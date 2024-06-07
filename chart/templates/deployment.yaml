@@ -25,4 +25,7 @@ spec:
             - name: AWS_DEFAULT_REGION
               value: us-east-1
             - name: db_url
-              value: {{ .Values.dbConnectionString }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dbSecret }}
+                  key: connection_string

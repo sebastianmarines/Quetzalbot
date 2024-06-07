@@ -274,3 +274,31 @@ resource "helm_release" "argocd" {
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
 }
+
+resource "kubernetes_namespace" "fenix" {
+  metadata {
+    name = local.name
+  }
+}
+
+resource "kubernetes_secret" "db" {
+  metadata {
+    name      = "${local.name}-db-connection-string"
+    namespace = kubernetes_namespace.fenix.metadata.0.name
+  }
+
+  data = {
+    connection_string = join("", [
+      "postgresql://",
+      module.db.db_instance_username,
+      ":",
+      jsondecode(data.aws_secretsmanager_secret_version.master.secret_string)["password"],
+      "@",
+      module.db.db_instance_endpoint,
+      ":",
+      module.db.db_instance_port,
+      "/",
+      local.name
+    ])
+  }
+}

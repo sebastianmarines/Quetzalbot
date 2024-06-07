@@ -6,7 +6,7 @@ domain: fenixqa.tech
 
 certificateArn: arn:aws:acm:us-east-1:780690093991:certificate/403a8e2e-6e08-4c4d-8c3d-ccfe15ee32c9
 
-dbConnectionString: postgresql://fenix:[[gGxZK4-TsrMAB28>c17{B|Z$n8@fenix.cx6nwk8y1imp.us-east-1.rds.amazonaws.com:3306/fenix
+dbSecret: fenix-db-connection-string
 
 image:
   repository: 780690093991.dkr.ecr.us-east-1.amazonaws.com/fenix
