@@ -70,7 +70,7 @@ module "eks" {
       instance_types = ["m7a.medium"]
 
       min_size     = 1
-      max_size     = 2
+      max_size     = 1
       desired_size = 1
 
       taints = {
@@ -186,13 +186,13 @@ resource "kubectl_manifest" "karpenter_node_pool" {
               values: ["m"]
             - key: "karpenter.k8s.aws/instance-cpu"
               operator: In
-              values: ["4", "8"]
+              values: ["1"]
             - key: "karpenter.k8s.aws/instance-hypervisor"
               operator: In
               values: ["nitro"]
             - key: "karpenter.k8s.aws/instance-generation"
               operator: Gt
-              values: ["2"]
+              values: ["6"]
             - key: "kubernetes.io/arch"
               operator: In
               values: ["amd64"]
@@ -260,4 +260,17 @@ resource "helm_release" "alb_ingress_controller" {
 resource "kubectl_manifest" "external_dns" {
   yaml_body  = file("${path.module}/manifests/external-dns.yaml")
   depends_on = [aws_acm_certificate_validation.cert]
+}
+
+resource "kubernetes_namespace" "argocd" {
+  metadata {
+    name = "argocd"
+  }
+}
+
+resource "helm_release" "argocd" {
+  namespace  = kubernetes_namespace.argocd.metadata.0.name
+  name       = "argocd"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-cd"
 }

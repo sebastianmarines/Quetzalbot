@@ -52,6 +52,12 @@ engine = create_engine(db_url, echo=True)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        page = session.get(Page, 1)
+        if not page:
+            page = Page(path_html="https://fenixqa.tech")
+            session.add(page)
+            session.commit()
 
 
 create_db_and_tables()

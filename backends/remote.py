@@ -46,7 +46,7 @@ class RemoteBackend(Backend):
         )
 
         json = report.model_dump()
-        response = requests.post("http://localhost:8000/change", json=json)
+        response = requests.post("https://fenixqa.tech/change", json=json)
         response.raise_for_status()
         self.cache[key] = value
 

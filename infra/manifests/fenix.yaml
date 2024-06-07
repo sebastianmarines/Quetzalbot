@@ -1,50 +1,64 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fenix
+  labels:
+    name: fenix
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: fenix-deployment
+  namespace: fenix
   labels:
-    app: nginx
+    app: fenix
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: fenix
   template:
     metadata:
       labels:
-        app: nginx
+        app: fenix
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
+        - name: fenix
+          image: 780690093991.dkr.ecr.us-east-1.amazonaws.com/fenix:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+            - name: db_url
+              value: postgresql://fenix:5UP{U!?N|B_#E|!oEXun9aPdeEJi@fenix.cx6nwk8y1imp.us-east-1.rds.amazonaws.com:3306/fenix
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-nodeport-service
+  name: fenix-nodeport-service
+  namespace: fenix
   labels:
-    app: nginx
-  annotations:
+      app: fenix
 spec:
   type: NodePort
   selector:
-    app: nginx
+      app: fenix
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 8000
+      targetPort: 8000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-nginxapp1
+  name: ingress-fenix
+  namespace: fenix
   labels:
-    app: nginx
+    app: fenix
   annotations:
     external-dns.alpha.kubernetes.io/hostname: fenixqa.tech
     # Load Balancer Name
-    alb.ingress.kubernetes.io/load-balancer-name: app1ingress
+    alb.ingress.kubernetes.io/load-balancer-name: fenix
     #kubernetes.io/ingress.class: "alb" (OLD INGRESS CLASS NOTATION - STILL WORKS BUT RECOMMENDED TO USE IngressClass Resource) # Additional Notes: https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.3/guide/ingress/ingress_class/#deprecated-kubernetesioingressclass-annotation
     # Ingress Core Settings
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -62,17 +76,17 @@ spec:
   ingressClassName: alb
   defaultBackend:
     service:
-      name: nginx-nodeport-service
+      name: fenix-nodeport-service
       port:
-        number: 80
+        number: 8000
   rules:
     - host: fenixqa.tech
       http:
         paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-                name: nginx-nodeport-service
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fenix-nodeport-service
                 port:
-                  number: 80
+                  number: 8000
