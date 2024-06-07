@@ -25,4 +25,4 @@ spec:
             - name: AWS_DEFAULT_REGION
               value: us-east-1
             - name: db_url
-              value: postgresql://fenix:[[gGxZK4-TsrMAB28>c17{B|Z$n8@fenix.cx6nwk8y1imp.us-east-1.rds.amazonaws.com:3306/fenix
+              value: {{ .Values.dbConnectionString }}
