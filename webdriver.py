@@ -7,16 +7,22 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-from backends import Backend, LocalBackend, RemoteBackend
-from healers.healer import FuzzyHealer, Healer
+from backends import Backend, RemoteBackend
+from healers import FuzzyHealer, Healer
 from utils import generate_random_filename
 from utils.dom import DOMElement, build_dom_tree, from_web_element_to_backend_element
 
 
 @dataclass
 class Config:
-    screenshot_enabled = True
-    logging_level = logging.INFO
+    screenshot_enabled: bool | None
+    logging_level: int | None
+
+    def __post_init__(self):
+        if self.screenshot_enabled is None:
+            self.screenshot_enabled = True
+        if self.logging_level is None:
+            self.logging_level = logging.INFO
 
 
 class HealingDriver:
@@ -30,10 +36,10 @@ class HealingDriver:
         self,
         browser_name="chrome",
         backend: Backend = RemoteBackend(
-            bucket_name="fenix-screenshots-abk1249mx", endpoint="https://localhost:8000"
+            bucket_name="fenix-screenshots-abk1249mx", endpoint="http://localhost:8000"
         ),
         healer: Healer = FuzzyHealer(),
-        config: Config = Config(),
+        config: Config = Config(False, logging.INFO),
         **kwargs,
     ):
         self.config = config

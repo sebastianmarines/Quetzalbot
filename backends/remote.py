@@ -1,11 +1,9 @@
-import logging
-
 import boto3
 import requests
 
 from api.models import Report
 from utils import generate_random_filename
-from utils.dom import BackendDOMElement
+from utils.dom import BackendDOMElement, DOMElement
 
 from .base import Backend
 
@@ -19,7 +17,7 @@ class RemoteBackend(Backend):
 
     def _fetch(self): ...
 
-    def __getitem__(self, element_id) -> BackendDOMElement:
+    def __getitem__(self, element_id) -> DOMElement:
         return self.cache.get(element_id)
 
     def __setitem__(self, key: str, value: BackendDOMElement):
@@ -47,7 +45,7 @@ class RemoteBackend(Backend):
         )
 
         json = report.model_dump()
-        response = requests.post(f"${self.endpoint}/change", json=json)
+        response = requests.post(f"{self.endpoint}/change", json=json)
         response.raise_for_status()
         self.cache[key] = value
 
