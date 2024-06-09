@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import pandas as pd
 from fastapi import FastAPI
@@ -15,13 +16,22 @@ from .utils import send_notification
 
 EMAIL = "sebastian0marines@gmail.com"
 
-logger = logging.getLogger(__name__)
-
 env = Environment(loader=FileSystemLoader("."))
 env.filters["fmt_time"] = lambda v: str(v).split(".")[0]
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="styles"), name="static")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler(sys.stdout)
+log_formatter = logging.Formatter(
+    "%(asctime)s [%(processName)s: %(process)d] [%(threadName)s: %(thread)d] [%(levelname)s] %(name)s: %(message)s"
+)
+stream_handler.setFormatter(log_formatter)
+logger.addHandler(stream_handler)
+
+logger.info("API is starting up")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -39,11 +49,37 @@ async def index():
         return HTMLResponse(content=output)
 
 
-@app.get("/{elem_id}", response_model=Element)
-async def get_element(elem_id: int):
+@app.get("/download")
+async def download_csv():
     with Session(engine) as session:
-        element = session.get(Element, elem_id)
-        return element
+        statement = select(Change, Element).join(Element, isouter=True)
+        reports = session.exec(statement).fetchall()
+    df_rows = []
+    for change, element in reports:
+        row = [
+            change.id,
+            change.sel_date,
+            change.sel_time,
+            change.failed_locator,
+            change.healed_locator,
+            change.score,
+            change.url_screenshot,
+            element.id_element,
+            element.tag_name,
+            element.classes,
+            element.text_content,
+            element.selector,
+            element.active,
+        ]
+        df_rows.append(row)
+    df = pd.DataFrame(df_rows)
+    print(df)
+    csv_file = df.to_csv(index=False)
+    logger.info("CSV file created")
+    response = Response(content=csv_file)
+    response.headers["Content-Disposition"] = "attachment; filename=reports.csv"
+    response.headers["Content-Type"] = "text/csv"
+    return response
 
 
 @app.post("/change", response_model=Report)
@@ -53,7 +89,7 @@ async def receive_report(report: Report):
         report.element_classes,
         report.element_text,
         report.element_selector,
-        1,
+        1,  # TODO: hardcoded
     )
     save_attributes(report.attributes, saved_element)
     if report.change_healed:
@@ -84,41 +120,16 @@ async def update_status(elem_id: int, status_update: StatusUpdate):
             return {"error": "Element not found"}
 
 
-@app.get("/download")
-async def download_csv():
-    with Session(engine) as session:
-        statement = select(Change, Element).join(Element, isouter=True)
-        reports = session.exec(statement).fetchall()
-    df_rows = []
-    for change, element in reports:
-        row = [
-            change.id,
-            change.sel_date,
-            change.sel_time,
-            change.failed_locator,
-            change.healed_locator,
-            change.score,
-            change.url_screenshot,
-            element.id_element,
-            element.tag_name,
-            element.classes,
-            element.text_content,
-            element.selector,
-            element.active,
-        ]
-        df_rows.append(row)
-    df = pd.DataFrame(df_rows)
-    print(df)
-    csv_file = df.to_csv(index=False)
-    response = Response(content=csv_file)
-    response.headers["Content-Disposition"] = "attachment; filename=reports.csv"
-    response.headers["Content-Type"] = "text/csv"
-    return response
-
-
 @app.get("/fetch_active")
 async def fetch_active() -> list[Element]:
     with Session(engine) as session:
         statement = select(Element).where(Element.active == 1)
         elements = session.exec(statement).fetchall()
-    return elements
+    return list(elements)
+
+
+@app.get("/{elem_id}", response_model=Element)
+async def get_element(elem_id: int):
+    with Session(engine) as session:
+        element = session.get(Element, elem_id)
+        return element

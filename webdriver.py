@@ -29,7 +29,9 @@ class HealingDriver:
     def __init__(
         self,
         browser_name="chrome",
-        backend: Backend = RemoteBackend(),
+        backend: Backend = RemoteBackend(
+            bucket_name="fenix-screenshots-abk1249mx", endpoint="https://localhost:8000"
+        ),
         healer: Healer = FuzzyHealer(),
         config: Config = Config(),
         **kwargs,

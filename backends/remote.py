@@ -11,8 +11,9 @@ from .base import Backend
 
 
 class RemoteBackend(Backend):
-    def __init__(self):
-        self.bucket_name = "fenix-screenshots-abk1249mx"
+    def __init__(self, bucket_name: str, endpoint: str):
+        self.bucket_name = bucket_name
+        self.endpoint = endpoint
         self.s3_client = boto3.client("s3")
         self.cache = {}
 
@@ -46,7 +47,7 @@ class RemoteBackend(Backend):
         )
 
         json = report.model_dump()
-        response = requests.post("https://fenixqa.tech/change", json=json)
+        response = requests.post(f"${self.endpoint}/change", json=json)
         response.raise_for_status()
         self.cache[key] = value
 
