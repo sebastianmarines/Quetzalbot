@@ -35,6 +35,6 @@ resource "aws_s3_bucket_policy" "fenix" {
 resource "aws_s3_bucket_public_access_block" "fenix" {
   bucket = aws_s3_bucket.fenix.bucket
 
-  block_public_acls       = false
-  block_public_policy     = false
+  block_public_acls   = false
+  block_public_policy = false
 }

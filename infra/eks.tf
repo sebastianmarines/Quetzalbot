@@ -100,22 +100,22 @@ module "eks" {
 
       min_size     = 1
       max_size     = 2
-      desired_size = 1
+      desired_size = 2
 
       iam_role_additional_policies = {
-        AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        AmazonSSMManagedInstanceCore  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         ALBIngressControllerIAMPolicy = aws_iam_policy.alb.arn
         Route53Policy                 = aws_iam_policy.route53.arn
         SESPolicy                     = aws_iam_policy.ses.arn
       }
 
-      #      taints = {
-      #        addons = {
-      #          key    = "CriticalAddonsOnly"
-      #          value  = "true"
-      #          effect = "NO_SCHEDULE"
-      #        },
-      #      }
+#      taints = {
+#        addons = {
+#          key    = "CriticalAddonsOnly"
+#          value  = "true"
+#          effect = "NO_SCHEDULE"
+#        },
+#      }
     }
   }
 
@@ -235,7 +235,7 @@ resource "kubectl_manifest" "karpenter_node_pool" {
               operator: In
               values: ["amd64"]
       limits:
-        cpu: 1000
+        cpu: 5000
       disruption:
         consolidationPolicy: WhenEmpty
         consolidateAfter: 30s
