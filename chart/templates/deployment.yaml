@@ -29,6 +29,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.dbSecret }}
                   key: connection_string
+          resources:
+            requests:
+              memory: 500Mi
           livenessProbe:
             httpGet:
               path: /healthz
