@@ -29,3 +29,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.dbSecret }}
                   key: connection_string
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 3

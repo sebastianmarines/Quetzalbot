@@ -50,6 +50,10 @@ async def index():
         return HTMLResponse(content=output)
 
 
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
+
 @app.post("/heal/random_forest")
 def heal_random_forest(data: HtmlHealing):
     return heal(data)
