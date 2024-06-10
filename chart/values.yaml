@@ -4,7 +4,7 @@ replicas: 3
 
 domain: fenixqa.tech
 
-certificateArn: arn:aws:acm:us-east-1:780690093991:certificate/403a8e2e-6e08-4c4d-8c3d-ccfe15ee32c9
+certificateArn: arn:aws:acm:us-east-1:780690093991:certificate/6c989407-10ce-48d5-af4e-8612fdc77694
 
 dbSecret: fenix-db-connection-string
 

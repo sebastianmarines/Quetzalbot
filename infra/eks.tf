@@ -38,6 +38,22 @@ resource "aws_iam_policy" "ses" {
   )
 }
 
+module "vpc_cni_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name_prefix      = "VPC-CNI-IRSA"
+  attach_vpc_cni_policy = true
+  vpc_cni_enable_ipv4   = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-node"]
+    }
+  }
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.13.1"
@@ -51,8 +67,21 @@ module "eks" {
   cluster_addons = {
     coredns                = {}
     eks-pod-identity-agent = {}
-    kube-proxy             = {}
-    vpc-cni                = {}
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent              = true
+      before_compute           = true
+      service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
+      configuration_values = jsonencode({
+        env = {
+          # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
+    }
   }
 
   vpc_id                   = module.vpc.vpc_id
@@ -73,13 +102,20 @@ module "eks" {
       max_size     = 2
       desired_size = 1
 
-      taints = {
-        addons = {
-          key    = "CriticalAddonsOnly"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        },
+      iam_role_additional_policies = {
+        AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ALBIngressControllerIAMPolicy = aws_iam_policy.alb.arn
+        Route53Policy                 = aws_iam_policy.route53.arn
+        SESPolicy                     = aws_iam_policy.ses.arn
       }
+
+      #      taints = {
+      #        addons = {
+      #          key    = "CriticalAddonsOnly"
+      #          value  = "true"
+      #          effect = "NO_SCHEDULE"
+      #        },
+      #      }
     }
   }
 
@@ -132,7 +168,7 @@ resource "helm_release" "karpenter" {
   repository_username = data.aws_ecrpublic_authorization_token.token.user_name
   repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
-  version             = "0.36.1"
+  version             = "0.37.0"
   wait                = false
 
   values = [
@@ -143,6 +179,8 @@ resource "helm_release" "karpenter" {
       interruptionQueue: ${module.karpenter.queue_name}
     EOT
   ]
+
+  depends_on = [helm_release.alb_ingress_controller]
 }
 
 resource "kubectl_manifest" "karpenter_node_class" {
@@ -208,38 +246,6 @@ resource "kubectl_manifest" "karpenter_node_pool" {
   ]
 }
 
-# Example deployment using the [pause image](https://www.ianlewis.org/en/almighty-pause-container)
-# and starts with zero replicas
-resource "kubectl_manifest" "karpenter_example_deployment" {
-  yaml_body = <<-YAML
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: inflate
-    spec:
-      replicas: 0
-      selector:
-        matchLabels:
-          app: inflate
-      template:
-        metadata:
-          labels:
-            app: inflate
-        spec:
-          terminationGracePeriodSeconds: 0
-          containers:
-            - name: inflate
-              image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
-              resources:
-                requests:
-                  cpu: 1
-  YAML
-
-  depends_on = [
-    helm_release.karpenter
-  ]
-}
-
 resource "helm_release" "alb_ingress_controller" {
   namespace        = "kube-system"
   name             = "alb-ingress-controller"
@@ -247,14 +253,18 @@ resource "helm_release" "alb_ingress_controller" {
   chart            = "aws-load-balancer-controller"
   create_namespace = true
   wait             = false
+  version          = ""
 
   values = [
     <<-EOT
         clusterName: ${module.eks.cluster_name}
         vpcId: ${module.vpc.vpc_id}
         region: ${data.aws_region.current.name}
+#        enableServiceMutatorWebhook: false
         EOT
   ]
+
+  depends_on = [module.karpenter]
 }
 
 resource "kubectl_manifest" "external_dns" {
@@ -273,6 +283,7 @@ resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
+  depends_on = [helm_release.alb_ingress_controller]
 }
 
 resource "kubernetes_namespace" "fenix" {

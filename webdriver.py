@@ -36,10 +36,10 @@ class HealingDriver:
         self,
         browser_name="chrome",
         backend: Backend = RemoteBackend(
-            bucket_name="fenix-screenshots-abk1249mx", endpoint="http://localhost:8000"
+            bucket_name="fenix-screenshots-bmkweqjm", endpoint="https://fenixqa.tech"
         ),
         healer: Healer = FuzzyHealer(),
-        config: Config = Config(False, logging.INFO),
+        config: Config = Config(True, logging.INFO),
         **kwargs,
     ):
         self.config = config

@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from sqlmodel import Session, col, select
 
 from api.database_handling import engine, save_attributes, save_change, save_element
-from api.db import Change, Element
+from api.db import Change, Element, Attribute
 from api.models import Report, StatusUpdate
 
 from .utils import send_notification
@@ -123,7 +123,7 @@ async def update_status(elem_id: int, status_update: StatusUpdate):
 @app.get("/fetch_active")
 async def fetch_active() -> list[Element]:
     with Session(engine) as session:
-        statement = select(Element).where(Element.active == 1)
+        statement = select(Element).join(Attribute).where(Element.active == 1)
         elements = session.exec(statement).fetchall()
     return list(elements)
 
@@ -131,5 +131,8 @@ async def fetch_active() -> list[Element]:
 @app.get("/{elem_id}", response_model=Element)
 async def get_element(elem_id: int):
     with Session(engine) as session:
-        element = session.get(Element, elem_id)
+        # element = session.get(Element, elem_id)
+        # return element
+        statement = select(Element).join(Attribute).where(Element.id_element == elem_id)
+        element = session.exec(statement).first()
         return element
