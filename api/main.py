@@ -9,9 +9,10 @@ from jinja2 import Environment, FileSystemLoader
 from sqlmodel import Session, col, select
 
 from api.database_handling import engine, save_attributes, save_change, save_element
-from api.db import Change, Element, Attribute
-from api.models import Report, StatusUpdate
+from api.db import Attribute, Change, Element
+from api.models import HtmlHealing, Report, StatusUpdate
 
+from .random_forest import html_to_df, heal
 from .utils import send_notification
 
 EMAIL = "sebastian0marines@gmail.com"
@@ -47,6 +48,11 @@ async def index():
         template = env.get_template("dashboard.html.jinja2")
         output = template.render(reports=reports)
         return HTMLResponse(content=output)
+
+
+@app.post("/heal/random_forest")
+def heal_random_forest(data: HtmlHealing):
+    return heal(data)
 
 
 @app.get("/download")

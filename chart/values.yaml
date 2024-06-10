@@ -1,6 +1,6 @@
 name: fenix
 
-replicas: 3
+replicas: 10
 
 domain: fenixqa.tech
 

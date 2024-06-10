@@ -14,5 +14,3 @@ class Healer(metaclass=ABCMeta):
     def heal(
         self, previous_element: DOMElement, dom_tree: DOMElement
     ) -> tuple[DOMElement, int]: ...
-
-

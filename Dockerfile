@@ -32,5 +32,6 @@ COPY api ./
 
 RUN find . -type f -name '*.py' -exec sed -i 's/\bapi\.//g' {} +
 RUN sed -i 's/from \.utils import send_notification/from utils import send_notification/' main.py
+RUN sed -i 's/from \.random_forest import html_to_df/from random_forest import html_to_df/' main.py
 
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

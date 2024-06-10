@@ -1,4 +1,10 @@
 from pydantic import BaseModel
+from collections import namedtuple
+
+element_t = namedtuple(
+    "element",
+    ["element", "id", "tag_name", "classes", "text_content", "selector", "attributes"],
+)
 
 
 class Report(BaseModel):
@@ -16,3 +22,8 @@ class Report(BaseModel):
 
 class StatusUpdate(BaseModel):
     success: bool
+
+
+class HtmlHealing(BaseModel):
+    html: str
+    prev_element: element_t

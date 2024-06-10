@@ -3,6 +3,7 @@ from typing import Tuple
 from fuzzywuzzy import fuzz
 
 from utils.dom import DOMElement
+
 from .healer import Healer
 
 
@@ -25,11 +26,11 @@ class FuzzyHealer(Healer):
         text_content_score = fuzz.ratio(element1.text_content, element2.text_content)
 
         return (
-                tag_name_score + attributes_score + classes_score + text_content_score
+            tag_name_score + attributes_score + classes_score + text_content_score
         ) // 4
 
     def find_best_match(
-            self, target: DOMElement, root: DOMElement
+        self, target: DOMElement, root: DOMElement
     ) -> Tuple[DOMElement, int]:
         """Finds the best match for the target element in the DOM tree rooted at root."""
         best_match = None
@@ -53,7 +54,7 @@ class FuzzyHealer(Healer):
             raise ValueError("No match found in the DOM tree.")
 
     def heal(
-            self, previous_element: DOMElement, dom_tree: DOMElement
+        self, previous_element: DOMElement, dom_tree: DOMElement
     ) -> tuple[DOMElement, int]:
         match = self.find_best_match(previous_element, dom_tree)
         return match

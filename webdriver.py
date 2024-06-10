@@ -7,8 +7,8 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-from backends import Backend, RemoteBackend
-from healers import FuzzyHealer, Healer
+from backends import Backend, LocalBackend, RemoteBackend
+from healers import FuzzyHealer, Healer, RandomForest
 from utils import generate_random_filename
 from utils.dom import DOMElement, build_dom_tree, from_web_element_to_backend_element
 
@@ -35,11 +35,12 @@ class HealingDriver:
     def __init__(
         self,
         browser_name="chrome",
-        backend: Backend = RemoteBackend(
-            bucket_name="fenix-screenshots-bmkweqjm", endpoint="https://fenixqa.tech"
-        ),
-        healer: Healer = FuzzyHealer(),
-        config: Config = Config(True, logging.INFO),
+        # backend: Backend = RemoteBackend(
+        #     bucket_name="fenix-screenshots-bmkweqjm", endpoint="https://fenixqa.tech"
+        # ),
+        backend: Backend = LocalBackend(),
+        healer: Healer = RandomForest(backend_url="http://localhost:8000"),
+        config: Config = Config(False, logging.INFO),
         **kwargs,
     ):
         self.config = config

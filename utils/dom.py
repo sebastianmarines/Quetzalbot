@@ -11,15 +11,23 @@ class DOMElement:
     text_content: str
     parent: "DOMElement"
 
-    def __init__(self, tag: Tag, parent: "DOMElement" = None):
-        self.tag_name = tag.name
-        self.parent = parent
-        self.children = [
-            DOMElement(child, self) for child in tag.children if isinstance(child, Tag)
-        ]
-        self.attributes = {k: v for k, v in tag.attrs.items() if k != "class"}
-        self.classes = tag.get("class", [])
-        self.text_content = tag.get_text(strip=True)
+    def __init__(self, tag: Tag | None, parent: "DOMElement" = None):
+        if tag:
+            self.tag_name = tag.name
+            self.parent = parent
+            self.children = [
+                DOMElement(child, self) for child in tag.children if isinstance(child, Tag)
+            ]
+            self.attributes = {k: v for k, v in tag.attrs.items() if k != "class"}
+            self.classes = tag.get("class", [])
+            self.text_content = tag.get_text(strip=True)
+        else:
+            self.tag_name = ""
+            self.children = []
+            self.attributes = {}
+            self.classes = []
+            self.text_content = ""
+            self.parent = None
 
     def __repr__(self):
         return (
