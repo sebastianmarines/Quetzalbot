@@ -40,7 +40,7 @@ class HealingDriver:
         # ),
         backend: Backend = LocalBackend(),
         healer: Healer = RandomForest(backend_url="http://localhost:8000"),
-        config: Config = Config(False, logging.INFO),
+        config: Config = Config(True, logging.INFO),
         **kwargs,
     ):
         self.config = config

@@ -1,8 +1,9 @@
 import time
 
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
+from backends import RemoteBackend
+from healers import RandomForest, FuzzyHealer
 from webdriver import HealingDriver
 
 
@@ -10,7 +11,13 @@ class TestMusicBoxd:
     driver: HealingDriver
 
     def setup_method(self):
-        self.driver = HealingDriver()
+        self.driver = HealingDriver(
+            backend=RemoteBackend(
+                bucket_name="fenix-screenshots-bmkweqjm",
+                endpoint="https://fenixqa.tech"
+            ),
+            healer=FuzzyHealer(),
+        )
         self.url = "http://localhost:3000/"
 
     def execute_flow(self, path, button_id):
